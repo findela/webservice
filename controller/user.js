@@ -17,23 +17,46 @@ router.post("/register", (req, res, next) => {
 
     db.query(locator.checkUserExistSQL(), (err, data)=> {
         if(!err) {
-            if (data[0].userCount > 0) {
-                res.status(302).json({
-                    message: "Ahhh! Same email id already exist!",
-                    data: data[0],
-                    status: 302
+            if(req.body.emailId === "" || req.body.password === "" || req.body.firstName === "" || req.body.lastName === "") {
+                res.status(400).json({
+                    message: "Stopp! All required fields are mandatory",
+                    status: 400
                 });
             }
             else {
-                db.query(locator.getAddUserSQL(), (err, data) => {
-                    res.status(201).json({
-                        message: "Voila! Registration successful",
-                        data: {
-                            userId: data.insertId
-                        },
-                        status: 201
+                if (data[0].userCount > 0) {
+                    res.status(302).json({
+                        message: "Ahhh! Same email already exist!",
+                        data: data[0],
+                        status: 302
                     });
-                });
+                }
+                else {
+                    db.query(locator.getAddUserSQL(), (err, data) => {
+                        if(err) {
+                            res.status(500).json({
+                                message: "Shhh! Internal server error",
+                                status: 500
+                            });
+                        }
+                        else {
+                            let date = new Date();
+                            res.status(200).json({
+                                message: "Voila! Registration successful",
+                                data: {
+                                    userDetails: {
+                                        emailId: req.body.emailId,
+                                        firstName: req.body.firstName,
+                                        lastName: req.body.lastName,
+                                        userId: data.insertId,
+                                        createdAt: date.toTimeString()
+                                    }
+                                },
+                                status: 200
+                            });
+                        }
+                    });
+                }
             }
         }
         else {
@@ -57,15 +80,20 @@ router.post("/login", (req, res, next) => {
             if (data[0].userCount == 1) {
                 db.query(locator.fetchUserDetailsSQL(req.body.emailId), (err, data) => {
                     if(!err) {
-                        res.status(202).json({
-                            message: "Great! Login successful.",
+                        let date = new Date();
+                        res.status(200).json({
+                            message: "Great! Login successful",
                             data: {
-                                firstName: data[0].first_name,
-                                lastName: data[0].last_name,
-                                emailId: data[0].email,
-                                userType: data[0].user_type
+                                userDetails : {
+                                    firstName: data[0].first_name,
+                                    lastName: data[0].last_name,
+                                    emailId: data[0].email,
+                                    userType: data[0].user_type,
+                                    userId: data[0].id,
+                                    loggedInAt: date.toTimeString()
+                                }
                             },
-                            status: 202
+                            status: 200
                         });
                     }
                     else {
@@ -77,10 +105,10 @@ router.post("/login", (req, res, next) => {
                 });
             }
             else {
-                res.status(302).json({
+                res.status(401).json({
                     message: "Ohhh! Credentials mismatched!",
                     data: data[0],
-                    status: 302
+                    status: 401
                 });
             }
         }
