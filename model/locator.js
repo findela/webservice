@@ -17,6 +17,11 @@ class Locator {
         let sql = `INSERT INTO locators(location_name,geolocation,like_count,pattern,width,height,depth,calculate_in,user_id,status) VALUES('${this.location_name}','${this.geolocation}',${this.like_count},'${this.pattern}',${this.width},${this.height},${this.depth},'${this.calculate_in}',${this.user_id},${this.status})`;
         return sql;
     }
+
+    getAddLocatorSQL() {
+        let sql = `INSERT INTO locators(location_name,geolocation,like_count,pattern,width,height,depth,calculate_in,user_id,status) VALUES('${this.location_name}','${this.geolocation}',${this.like_count},'${this.pattern}',${this.width},${this.height},${this.depth},'${this.calculate_in}',${this.user_id},${this.status})`;
+        return sql;
+    }
 }
 
 export default Locator;

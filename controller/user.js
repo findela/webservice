@@ -5,8 +5,8 @@ import User from "../model/user";
 const router = express.Router();
 
 router.post("/register", (req, res, next) => {
-    //read product information from request
-    let locator = new User(
+    //read user information from request
+    let user = new User(
         req.body.firstName,
         req.body.lastName,
         req.body.emailId,
@@ -15,7 +15,8 @@ router.post("/register", (req, res, next) => {
         req.body.status
     );
 
-    db.query(locator.checkUserExistSQL(), (err, data)=> {
+    //registering check
+    db.query(user.checkUserExistSQL(), (err, data)=> {
         if(!err) {
             if(req.body.emailId === "" || req.body.password === "" || req.body.firstName === "" || req.body.lastName === "") {
                 res.status(400).json({
@@ -32,7 +33,7 @@ router.post("/register", (req, res, next) => {
                     });
                 }
                 else {
-                    db.query(locator.getAddUserSQL(), (err, data) => {
+                    db.query(user.getAddUserSQL(), (err, data) => {
                         if(err) {
                             res.status(500).json({
                                 message: "Shhh! Internal server error",
@@ -68,17 +69,19 @@ router.post("/register", (req, res, next) => {
     });
 });
 
+
+//login check
 router.post("/login", (req, res, next) => {
     //read product information from request
-    let locator = new User(
+    let user = new User(
         req.body.emailId,
         req.body.password
     );
 
-    db.query(locator.checkUserAuthSQL(req.body.emailId,req.body.password), (err, data)=> {
+    db.query(user.checkUserAuthSQL(req.body.emailId,req.body.password), (err, data)=> {
         if(!err) {
             if (data[0].userCount == 1) {
-                db.query(locator.fetchUserDetailsSQL(req.body.emailId), (err, data) => {
+                db.query(user.fetchUserDetailsSQL(req.body.emailId), (err, data) => {
                     if(!err) {
                         let date = new Date();
                         res.status(200).json({
