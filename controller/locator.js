@@ -1,19 +1,8 @@
 import express from "express";
 import db from "../db/database";
-import Locator from "../domain/locator";
+import Locator from "../model/locator";
 
 const router = express.Router();
-
-router.get("/", (req, res, next) => {
-    db.query(Locator.getAllProductSQL(), (err, data)=> {
-        if(!err) {
-            res.status(200).json({
-                message:"Products listed.",
-                productId: data
-            });
-        }
-    });
-});
 
 router.post("/add", (req, res, next) => {
 
@@ -33,7 +22,7 @@ router.post("/add", (req, res, next) => {
     db.query(locator.getAddLocatorSQL(), (err, data)=> {
         res.status(200).json({
             message:"Location added.",
-            locationId: data.insertId
+            data: data.insertId
         });
     });
 });
