@@ -16,15 +16,15 @@ router.post("/register", (req, res, next) => {
     );
 
     //registering check
-    db.query(user.checkUserExistSQL(), (err, data)=> {
-        if(!err) {
-            if(req.body.emailId === "" || req.body.password === "" || req.body.firstName === "" || req.body.lastName === "") {
-                res.status(400).json({
-                    message: "Stopp! All required fields are mandatory",
-                    status: 400
-                });
-            }
-            else {
+    if(req.body.emailId === "" || req.body.password === "" || req.body.firstName === "" || req.body.lastName === "") {
+        res.status(400).json({
+            message: "Stopp! All required fields are mandatory",
+            status: 400
+        });
+    }
+    else {
+        db.query(user.checkUserExistSQL(), (err, data) => {
+            if (!err) {
                 if (data[0].userCount > 0) {
                     res.status(302).json({
                         message: "Ahhh! Same email already exist!",
@@ -34,7 +34,7 @@ router.post("/register", (req, res, next) => {
                 }
                 else {
                     db.query(user.getAddUserSQL(), (err, data) => {
-                        if(err) {
+                        if (err) {
                             res.status(500).json({
                                 message: "Shhh! Internal server error",
                                 status: 500
@@ -59,14 +59,14 @@ router.post("/register", (req, res, next) => {
                     });
                 }
             }
-        }
-        else {
-            res.status(500).json({
-                message: "Shhh! Internal server error",
-                status: 500
-            });
-        }
-    });
+            else {
+                res.status(500).json({
+                    message: "Shhh! Internal server error",
+                    status: 500
+                });
+            }
+        });
+    }
 });
 
 
@@ -78,50 +78,58 @@ router.post("/login", (req, res, next) => {
         req.body.password
     );
 
-    db.query(user.checkUserAuthSQL(req.body.emailId,req.body.password), (err, data)=> {
-        if(!err) {
-            if (data[0].userCount == 1) {
-                db.query(user.fetchUserDetailsSQL(req.body.emailId), (err, data) => {
-                    if(!err) {
-                        let date = new Date();
-                        res.status(200).json({
-                            message: "Great! Login successful",
-                            data: {
-                                userDetails : {
-                                    firstName: data[0].first_name,
-                                    lastName: data[0].last_name,
-                                    emailId: data[0].email,
-                                    userType: data[0].user_type,
-                                    userId: data[0].id,
-                                    loggedInAt: date.toTimeString()
-                                }
-                            },
-                            status: 200
-                        });
-                    }
-                    else {
-                        res.status(500).json({
-                            message: "Shhh! Internal server error",
-                            status: 500
-                        });
-                    }
-                });
+    if(req.body.emailId === "" || req.body.password === "" || req.body.firstName === "" || req.body.lastName === "") {
+        res.status(400).json({
+            message: "Stopp! All required fields are mandatory",
+            status: 400
+        });
+    }
+    else {
+        db.query(user.checkUserAuthSQL(req.body.emailId, req.body.password), (err, data) => {
+            if (!err) {
+                if (data[0].userCount == 1) {
+                    db.query(user.fetchUserDetailsSQL(req.body.emailId), (err, data) => {
+                        if (!err) {
+                            let date = new Date();
+                            res.status(200).json({
+                                message: "Great! Login successful",
+                                data: {
+                                    userDetails: {
+                                        firstName: data[0].first_name,
+                                        lastName: data[0].last_name,
+                                        emailId: data[0].email,
+                                        userType: data[0].user_type,
+                                        userId: data[0].id,
+                                        loggedInAt: date.toTimeString()
+                                    }
+                                },
+                                status: 200
+                            });
+                        }
+                        else {
+                            res.status(500).json({
+                                message: "Shhh! Internal server error",
+                                status: 500
+                            });
+                        }
+                    });
+                }
+                else {
+                    res.status(401).json({
+                        message: "Ohhh! Credentials mismatched!",
+                        data: data[0],
+                        status: 401
+                    });
+                }
             }
             else {
-                res.status(401).json({
-                    message: "Ohhh! Credentials mismatched!",
-                    data: data[0],
-                    status: 401
+                res.status(500).json({
+                    message: "Shhh! Internal server error",
+                    status: 500
                 });
             }
-        }
-        else {
-            res.status(500).json({
-                message: "Shhh! Internal server error",
-                status: 500
-            });
-        }
-    });
+        });
+    }
 });
 
 module.exports = router;
