@@ -1,12 +1,13 @@
 import mysql from "mysql";
+import env from '../env';
 
 const pool = mysql.createPool({
-    connectionLimit : 10,
-    host     : 'localhost',
-    user     : 'clg',
-    password : 'clg123',
-    database : 'app-water',
-    debug    : false
+    connectionLimit : env.connectionLimit,
+    host     : env.host,
+    user     : env.user,
+    password : env.password,
+    database : env.database,
+    debug    : env.debug
 });
 
 function executeQuery(sql, callback) {
