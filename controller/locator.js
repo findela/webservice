@@ -57,11 +57,11 @@ router.post("/list", (req, res, next) => {
         if(err) {
             res.status(500).json({
                 message: "Shhh! Internal server error",
-                status: 500
+                status: 500,
+                data: err
             });
         }
         else {
-            let date = new Date();
             res.status(200).json({
                 message: "Ummm! Location fetched successfully!",
                 data: {
@@ -81,7 +81,7 @@ router.post("/list/details", (req, res, next) => {
     if(!req.body.locationId || req.body.locationId === "") {
         res.status(401).json({
             message: "Ohhh! Location id not found or invalid",
-            status: 401
+            status: 401,
         });
     }
     else {
@@ -89,11 +89,11 @@ router.post("/list/details", (req, res, next) => {
             if (err) {
                 res.status(500).json({
                     message: "Shhh! Internal server error",
+                    data: err,
                     status: 500
                 });
             }
             else {
-                let date = new Date();
                 res.status(200).json({
                     message: "Bahhh! Location details fetched successfully!",
                     data: {

@@ -22,16 +22,24 @@ class Locator {
         let sql = "";
         if(userId !== "") {
             this.user_id = userId;
-            sql = `SELECT * FROM locators where locators.user_id = '${this.user_id}' order by id desc `;
+            sql = `SELECT locators.id as locationId, location_name as locationName, like_count as likeCount, 
+                    geolocation, pattern as locationPattern, width as locationWidth, depth as locationDepth, 
+                    height as locationLength, calculate_in as locationCalculatedBy, locators.status as locationStatus,
+                    locators.created_at as createdAt FROM locators where locators.user_id = '${this.user_id}' order by id desc`;
         }
         else {
-            sql = `SELECT * FROM locators order by id DESC `;
+            sql = `SELECT locators.id as locationId, location_name as locationName, like_count as likeCount, geolocation, 
+                    pattern as locationPattern, width as locationWidth, depth as locationDepth, 
+                    height as locationLength, calculate_in as locationCalculatedBy, locators.status as locationStatus,
+                    locators.created_at as createdAt , users.first_name as userFirstName, users.last_name as userLastName, 
+                    users.email as userEmailId FROM locators left join users on users.id = locators.user_id 
+                    where locators.status = 1 order by locators.id DESC `;
         }
         return sql;
     }
 
     fetchDetailLocatorSQL(locationId) {
-        let sql = `SELECT * FROM locators where locators.id = '${locationId}'`;
+        let sql = `SELECT * FROM locators where locators.id = '${locationId}' join `;
         return sql;
     }
 }
