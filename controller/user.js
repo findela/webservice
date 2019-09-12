@@ -1,6 +1,8 @@
 import express from "express";
 import db from "../db/database";
 import User from "../model/user";
+var jwt = require('jsonwebtoken');
+var crypto = require('crypto');
 
 const router = express.Router();
 
@@ -23,12 +25,12 @@ router.post("/register", (req, res, next) => {
         });
     }
     else {
+        user.password = crypto.createHash('sha256').update(req.body.password).digest('hex');
         db.query(user.checkUserExistSQL(), (err, data) => {
             if (!err) {
                 if (data[0].userCount > 0) {
                     res.status(302).json({
                         message: "Ahhh! Same email already exist!",
-                        data: data[0],
                         status: 302
                     });
                 }
@@ -85,7 +87,9 @@ router.post("/login", (req, res, next) => {
         });
     }
     else {
-        db.query(user.checkUserAuthSQL(req.body.emailId, req.body.password), (err, data) => {
+        user.emailId = req.body.emailId;
+        user.password = crypto.createHash('sha256').update(req.body.password).digest('hex');
+        db.query(user.checkUserAuthSQL(), (err, data) => {
             if (!err) {
                 if (data[0].userCount == 1) {
                     db.query(user.fetchUserDetailsSQL(req.body.emailId), (err, data) => {
@@ -94,14 +98,14 @@ router.post("/login", (req, res, next) => {
                             res.status(200).json({
                                 message: "Great! Login successful",
                                 data: {
-                                    userDetails: {
+                                    userAccessToken : jwt.sign(
+                                    {
                                         firstName: data[0].first_name,
                                         lastName: data[0].last_name,
                                         emailId: data[0].email,
                                         userType: data[0].user_type,
-                                        userId: data[0].id,
-                                        loggedInAt: date.toTimeString()
-                                    }
+                                        userId: data[0].id,loggedInAt: date.toTimeString()
+                                    }, 'pond-webservice'),
                                 },
                                 status: 200
                             });
@@ -117,7 +121,6 @@ router.post("/login", (req, res, next) => {
                 else {
                     res.status(401).json({
                         message: "Ohhh! Credentials mismatched!",
-                        data: data[0],
                         status: 401
                     });
                 }

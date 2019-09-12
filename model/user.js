@@ -1,5 +1,3 @@
-var crypto = require('crypto');
-
 class User {
 
     constructor(firstName,lastName,emailId,password,userType,status) {
@@ -19,15 +17,12 @@ class User {
 
     //registering new user (Admin/Customer)
     getAddUserSQL() {
-        this.password = crypto.createHash('sha256').update(this.password).digest('hex');
         let sql = `INSERT INTO users(first_name,last_name,email,password,user_type,status) VALUES('${this.firstName}','${this.lastName}','${this.emailId}','${this.password}','${this.userType}',${this.status})`;
         return sql;
     }
 
     //Login Check - if email and password combination matches
-    checkUserAuthSQL(email,password) {
-        this.emailId = email;
-        this.password = crypto.createHash('sha256').update(password).digest('hex');
+    checkUserAuthSQL() {
         let sql = `SELECT COUNT(*) as userCount FROM users where users.email = '${this.emailId}' AND users.password = '${this.password}'`;
         return sql;
     }
