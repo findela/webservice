@@ -1,8 +1,10 @@
 import express from "express";
 import db from "../db/database";
 import User from "../model/user";
-var jwt = require('jsonwebtoken');
-var crypto = require('crypto');
+
+let jwt = require('jsonwebtoken');
+let crypto = require('crypto');
+let nodemailer = require("nodemailer");
 
 const router = express.Router();
 
@@ -52,11 +54,12 @@ router.post("/register", (req, res, next) => {
                                         firstName: req.body.firstName,
                                         lastName: req.body.lastName,
                                         userId: data.insertId,
-                                        createdAt: date.toTimeString()
+                                        createdAt: date.toTimeString(),
                                     }
                                 },
                                 status: 200
                             });
+                            sendEmail(data.userDetails);
                         }
                     });
                 }
@@ -127,12 +130,45 @@ router.post("/login", (req, res, next) => {
             }
             else {
                 res.status(500).json({
-                    message: "Shhh! Internal server error",
+                    message: "Shh! Internal server error",
                     status: 500
                 });
             }
         });
     }
 });
+
+function sendEmail (emailObject) {
+    // create reusable transport method (opens pool of SMTP connections)
+    var smtpTransport = nodemailer.createTransport("SMTP",{
+        service: "Gmail",
+        auth: {
+            user: "tamaghna@findela.com",
+            pass: "25784612"
+        }
+    });
+
+// setup e-mail data with unicode symbols
+    let mailOptions = {
+        from: "Govt. of India ☕️ <fakegovtindia@blurdybloop.com>", // sender address
+        to: emailObject.emailId, // list of receivers
+        subject: "Hello ✔", // Subject line
+        text: "Hello world ✔", // plaintext body
+        html: "<b>Hello world ✔</b>" // html body
+    };
+
+// send mail with defined transport object
+    smtpTransport.sendMail(mailOptions, function(error, response){
+        if(error){
+            console.log(error);
+        }else{
+            console.log("Message sent: " + response.message);
+        }
+
+        // if you don't want to use this transport object anymore, uncomment following line
+        //smtpTransport.close(); // shut down the connection pool, no more messages
+    });
+}
+
 
 module.exports = router;
