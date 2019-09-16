@@ -39,7 +39,12 @@ class Locator {
     }
 
     fetchDetailLocatorSQL(locationId) {
-        let sql = `SELECT * FROM locators where locators.id = '${locationId}' join `;
+        let sql = `SELECT locators.id as locationId, location_name as locationName, like_count as likeCount, geolocation, 
+                    pattern as locationPattern, width as locationWidth, depth as locationDepth, 
+                    height as locationLength, calculate_in as locationCalculatedBy, locators.status as locationStatus,
+                    locators.created_at as createdAt , users.first_name as userFirstName, users.last_name as userLastName, 
+                    users.email as userEmailId FROM locators left join users on users.id = locators.user_id 
+                    where locators.id = ${locationId}`;
         return sql;
     }
 }
