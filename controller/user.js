@@ -1,11 +1,12 @@
 import express from "express";
 import db from "../db/database";
 import User from "../model/user";
+import env from '../env';
 
 let jwt = require('jsonwebtoken');
 let crypto = require('crypto');
-let nodemailer = require("nodemailer");
 
+const http = require('http');
 const router = express.Router();
 
 router.post("/register", (req, res, next) => {
@@ -14,52 +15,74 @@ router.post("/register", (req, res, next) => {
         req.body.firstName,
         req.body.lastName,
         req.body.emailId,
+        req.body.mobileNumber,
+        req.body.otpNumber,
+        req.body.otpStatus,
         req.body.password,
         req.body.userType,
         req.body.status
     );
 
     //registering check
-    if(req.body.emailId === "" || req.body.password === "" || req.body.firstName === "" || req.body.lastName === "") {
+    if(req.body.mobileNumber === "" || req.body.firstName === "" || req.body.lastName === "") {
         res.status(400).json({
             message: "Stopp! All required fields are mandatory",
             status: 400
         });
     }
     else {
-        user.password = crypto.createHash('sha256').update(req.body.password).digest('hex');
+        user.password = (req.body.password === "" ? '' : crypto.createHash('sha256').update(req.body.password).digest('hex'));
         db.query(user.checkUserExistSQL(), (err, data) => {
             if (!err) {
                 if (data[0].userCount > 0) {
                     res.status(302).json({
-                        message: "Ahhh! Same email already exist!",
+                        message: "Ahhh! Same mobile or email already exist!",
                         status: 302
                     });
                 }
                 else {
+
                     db.query(user.getAddUserSQL(), (err, data) => {
                         if (err) {
                             res.status(500).json({
                                 message: "Shhh! Internal server error",
-                                status: 500
+                                status: 500,
+                                data: err
                             });
                         }
                         else {
+
+                            let apiMobileData = {
+                                firstName: req.body.firstName,
+                                mobileNumber: req.body.mobileNumber,
+                                otpNumber: Math.floor(1000 + Math.random() * 9000),
+                                otpStatus: 0
+                            };
                             let date = new Date();
-                            res.status(200).json({
-                                message: "Voila! Registration successful",
-                                data: {
-                                    userDetails: {
-                                        emailId: req.body.emailId,
-                                        firstName: req.body.firstName,
-                                        lastName: req.body.lastName,
-                                        userId: data.insertId,
-                                        createdAt: date.toTimeString(),
-                                    }
-                                },
-                                status: 200
+
+                            apiMobileData['userId'] = data.insertId;
+                            db.query(user.getAddMobileOTP(apiMobileData), (err, data) => {
+                                if (err) {
+                                    res.status(500).json({
+                                        message: "Shhh! Internal server error",
+                                        status: 500,
+                                        data: err
+                                    });
+                                }
+                                else {
+                                    sendMobileOTP(apiMobileData);
+                                    res.status(200).json({
+                                        message: "Howdy! OTP sent successfully",
+                                        data: {
+                                            mobileNumber: req.body.mobileNumber,
+                                            requestId: data.insertId,
+                                            userId : apiMobileData.userId,
+                                            requestedAt: date.toTimeString(),
+                                        },
+                                        status: 200
+                                    });
+                                }
                             });
-                            sendEmail(data.userDetails);
                         }
                     });
                 }
@@ -79,23 +102,21 @@ router.post("/register", (req, res, next) => {
 router.post("/login", (req, res, next) => {
     //read product information from request
     let user = new User(
-        req.body.emailId,
-        req.body.password
+        req.body.mobileNumber
     );
 
-    if(req.body.emailId === "" || req.body.password === "" || req.body.firstName === "" || req.body.lastName === "") {
+    if(req.body.mobileNumber === "") {
         res.status(400).json({
-            message: "Stopp! All required fields are mandatory",
+            message: "Stopp! Mobile field is mandatory",
             status: 400
         });
     }
     else {
-        user.emailId = req.body.emailId;
-        user.password = crypto.createHash('sha256').update(req.body.password).digest('hex');
+        user.mobileNumber = req.body.mobileNumber;
         db.query(user.checkUserAuthSQL(), (err, data) => {
             if (!err) {
                 if (data[0].userCount == 1) {
-                    db.query(user.fetchUserDetailsSQL(req.body.emailId), (err, data) => {
+                    db.query(user.fetchUserDetailsSQL(req.body.mobileNumber), (err, data) => {
                         if (!err) {
                             let date = new Date();
                             res.status(200).json({
@@ -106,9 +127,11 @@ router.post("/login", (req, res, next) => {
                                         firstName: data[0].first_name,
                                         lastName: data[0].last_name,
                                         emailId: data[0].email,
+                                        mobileNumber: data[0].mobileNumber,
                                         userType: data[0].user_type,
-                                        userId: data[0].id,loggedInAt: date.toTimeString()
-                                    }, 'pond-webservice'),
+                                        userId: data[0].id,
+                                        loggedInAt: date.toTimeString()
+                                    }, env.mobileApi.senderId),
                                 },
                                 status: 200
                             });
@@ -138,37 +161,24 @@ router.post("/login", (req, res, next) => {
     }
 });
 
-function sendEmail (emailObject) {
-    // create reusable transport method (opens pool of SMTP connections)
-    var smtpTransport = nodemailer.createTransport("SMTP",{
-        service: "Gmail",
-        auth: {
-            user: "tamaghna@findela.com",
-            pass: "25784612"
+function sendMobileOTP (data) {
+    http.get(
+        env.mobileApi.host+"authkey="+
+        env.mobileApi.apiKey+
+        "&mobiles="+data.mobileNumber+
+        "&message=Hello "+data.firstName+", your otp is "+
+        data.otpNumber+"&sender="+
+        env.mobileApi.senderId+
+        "&route="+env.mobileApi.apiRoute+
+        "&country="+env.mobileApi.countryCode, (resp) => {
+            let data = '';
+            resp.on('end', () => {
+                console.log(JSON.parse(data));
+            });
         }
-    });
-
-// setup e-mail data with unicode symbols
-    let mailOptions = {
-        from: "Govt. of India ☕️ <fakegovtindia@blurdybloop.com>", // sender address
-        to: emailObject.emailId, // list of receivers
-        subject: "Hello ✔", // Subject line
-        text: "Hello world ✔", // plaintext body
-        html: "<b>Hello world ✔</b>" // html body
-    };
-
-// send mail with defined transport object
-    smtpTransport.sendMail(mailOptions, function(error, response){
-        if(error){
-            console.log(error);
-        }else{
-            console.log("Message sent: " + response.message);
-        }
-
-        // if you don't want to use this transport object anymore, uncomment following line
-        //smtpTransport.close(); // shut down the connection pool, no more messages
+    ).on("error", (err) => {
+        console.log("Error: " + err.message);
     });
 }
-
 
 module.exports = router;
