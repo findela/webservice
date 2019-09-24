@@ -10,11 +10,12 @@ servers:
   - url: 'https://findela.com'
     description: Rain Water Harvesting
 paths:
-  /user/registration:
+  /user/register:
     get:
       summary: Your GET endpoint
       tags: []
       responses: {}
+      description: ''
     post:
       summary: ''
       responses:
@@ -70,6 +71,7 @@ paths:
                   userType: CUSTOMER
         description: ''
       parameters: []
+    parameters: []
 components:
   schemas: {}
   securitySchemes: {}
