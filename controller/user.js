@@ -16,11 +16,7 @@ router.post("/register", (req, res, next) => {
         req.body.lastName,
         req.body.emailId,
         req.body.mobileNumber,
-        req.body.otpNumber,
-        req.body.otpStatus,
-        req.body.password,
-        req.body.userType,
-        req.body.status
+        req.body.userType
     );
 
     //registering check
@@ -31,8 +27,7 @@ router.post("/register", (req, res, next) => {
         });
     }
     else {
-        user.password = (req.body.password === "" ? '' : crypto.createHash('sha256').update(req.body.password).digest('hex'));
-        db.query(user.checkUserExistSQL(), (err, data) => {
+        db.query(user.checkUserAuthSQL(), (err, data) => {
             if (!err) {
                 if (data[0].userCount > 0) {
                     res.status(302).json({
@@ -51,37 +46,20 @@ router.post("/register", (req, res, next) => {
                             });
                         }
                         else {
-
-                            let apiMobileData = {
-                                firstName: req.body.firstName,
-                                mobileNumber: req.body.mobileNumber,
-                                otpNumber: Math.floor(1000 + Math.random() * 9000),
-                                otpStatus: 0
-                            };
                             let date = new Date();
-
-                            apiMobileData['userId'] = data.insertId;
-                            db.query(user.getAddMobileOTP(apiMobileData), (err, data) => {
-                                if (err) {
-                                    res.status(500).json({
-                                        message: "Shhh! Internal server error",
-                                        status: 500,
-                                        data: err
-                                    });
-                                }
-                                else {
-                                    sendMobileOTP(apiMobileData);
-                                    res.status(200).json({
-                                        message: "Howdy! OTP sent successfully",
-                                        data: {
-                                            mobileNumber: req.body.mobileNumber,
-                                            requestId: data.insertId,
-                                            userId : apiMobileData.userId,
-                                            requestedAt: date.toTimeString(),
-                                        },
-                                        status: 200
-                                    });
-                                }
+                            res.status(200).json({
+                                message: "Voila! Registration successful",
+                                data: {
+                                    userDetails: {
+                                        emailId: req.body.emailId,
+                                        mobileNumber: req.body.mobileNumber,
+                                        firstName: req.body.firstName,
+                                        lastName: req.body.lastName,
+                                        userId: data.insertId,
+                                        createdAt: date.toTimeString()
+                                    }
+                                },
+                                status: 200
                             });
                         }
                     });
@@ -101,9 +79,6 @@ router.post("/register", (req, res, next) => {
 //login check
 router.post("/login", (req, res, next) => {
     //read product information from request
-    let user = new User(
-        req.body.mobileNumber
-    );
 
     if(req.body.mobileNumber === "") {
         res.status(400).json({
@@ -112,7 +87,10 @@ router.post("/login", (req, res, next) => {
         });
     }
     else {
-        user.mobileNumber = req.body.mobileNumber;
+        let user = new User(
+            req.body.mobileNumber
+        );
+        user.mobileNumber = parseInt(req.body.mobileNumber);
         db.query(user.checkUserAuthSQL(), (err, data) => {
             if (!err) {
                 if (data[0].userCount == 1) {
@@ -127,7 +105,7 @@ router.post("/login", (req, res, next) => {
                                         firstName: data[0].first_name,
                                         lastName: data[0].last_name,
                                         emailId: data[0].email,
-                                        mobileNumber: data[0].mobileNumber,
+                                        mobileNumber: data[0].mobile,
                                         userType: data[0].user_type,
                                         userId: data[0].id,
                                         loggedInAt: date.toTimeString()
@@ -160,25 +138,5 @@ router.post("/login", (req, res, next) => {
         });
     }
 });
-
-function sendMobileOTP (data) {
-    http.get(
-        env.mobileApi.host+"authkey="+
-        env.mobileApi.apiKey+
-        "&mobiles="+data.mobileNumber+
-        "&message=Hello "+data.firstName+", your otp is "+
-        data.otpNumber+"&sender="+
-        env.mobileApi.senderId+
-        "&route="+env.mobileApi.apiRoute+
-        "&country="+env.mobileApi.countryCode, (resp) => {
-            let data = '';
-            resp.on('end', () => {
-                console.log(JSON.parse(data));
-            });
-        }
-    ).on("error", (err) => {
-        console.log("Error: " + err.message);
-    });
-}
 
 module.exports = router;

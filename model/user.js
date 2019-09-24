@@ -1,32 +1,17 @@
 class User {
 
-    constructor(firstName,lastName,emailId,mobileNumber,otpNumber,otpStatus,password,userType,status) {
+    constructor(firstName,lastName,emailId,mobileNumber,userType,status) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.emailId = emailId;
         this.mobileNumber = mobileNumber;
-        this.otpNumber = otpNumber;
-        this.otpStatus = otpStatus;
-        this.password = password;
         this.userType = userType;
         this.status = status;
     }
 
-    // checking if specific user already exists
-    checkUserExistSQL() {
-        let sql = `SELECT COUNT(*) as userCount FROM users where users.mobile LIKE '%${this.mobileNumber}%' OR users.email LIKE '%${this.emailId}%'`;
-        return sql;
-    }
-
     //registering new user (Admin/Customer)
     getAddUserSQL() {
-        let sql = `INSERT INTO users(first_name,last_name,email,mobile,password,user_type,status) VALUES('${this.firstName}','${this.lastName}','${this.emailId}','${this.mobileNumber}','${this.password}','${this.userType}',FALSE)`;
-        return sql;
-    }
-
-    //otp validation new user (Admin/Customer)
-    getAddMobileOTP(data) {
-        let sql = `INSERT INTO otp(otp,otp_status,user_id) VALUES(${data.otpNumber},${data.otpStatus},${data.userId})`;
+        let sql = `INSERT INTO users(first_name,last_name,email,mobile,user_type,status) VALUES('${this.firstName}','${this.lastName}','${this.emailId}','${this.mobileNumber}','${this.userType}',TRUE)`;
         return sql;
     }
 
