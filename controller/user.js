@@ -139,4 +139,70 @@ router.post("/login", (req, res, next) => {
     }
 });
 
+
+//OTP check
+router.post("/auth/otp", (req, res, next) => {
+    //read product information from request
+
+    if(req.body.mobileNumber === "") {
+        res.status(400).json({
+            message: "Stopp! Mobile field is mandatory",
+            status: 400
+        });
+    }
+    else {
+        let user = new User(
+            req.body.mobileNumber
+        );
+
+        let otpData = {
+            mobileNumber: parseInt(req.body.mobileNumber),
+            otpId:  Math.floor(1000 + Math.random() * 9000),
+            status: req.body.otpStatus
+        };
+
+        db.query(user.getUserOtpSQL(otpData), (err, data) => {
+            if (!err) {
+                res.status(200).json({
+                    message: "Great! OTP sent successfully",
+                    data: {
+                        tokenId: otpData.tokenId,
+                        mobileNumber: otpData.mobileNumber,
+                        otp: otpData.otpId
+                    },
+                    status: 200
+                });
+                sendMobileOTP(otpData);
+            }
+            else {
+                res.status(500).json({
+                    message: "Shh! Internal server error",
+                    status: 500,
+                    data: err
+                });
+            }
+        });
+    }
+});
+
+function sendMobileOTP (data) {
+    http.get(
+        env.mobileApi.host+"authkey="+
+        env.mobileApi.apiKey+
+        "&mobiles="+data.mobileNumber+
+        "&message=Hello, your otp is "+
+        data.otpId+"&sender="+
+        env.mobileApi.senderId+
+        "&route="+env.mobileApi.apiRoute+
+        "&country="+env.mobileApi.countryCode, (resp) => {
+            let data = '';
+            resp.on('end', () => {
+                console.log(JSON.parse(data));
+            });
+        }
+    ).on("error", (err) => {
+        console.log("Error: " + err.message);
+    });
+}
+
 module.exports = router;

@@ -15,6 +15,11 @@ class User {
         return sql;
     }
 
+    getUserOtpSQL(otpData) {
+        let sql = `INSERT INTO tokens(otp,mobile,status) VALUES('${otpData.otpId}','${otpData.mobileNumber}',TRUE)`;
+        return sql;
+    }
+
     //Login Check - if email and password combination matches
     checkUserAuthSQL() {
         let sql = `SELECT COUNT(*) as userCount FROM users where users.mobile = '${this.mobileNumber}'`;
