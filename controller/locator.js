@@ -82,10 +82,6 @@ router.post("/list", (req, res, next) => {
 
 //Fetching specific locator details (userId with null optional)
 router.post("/list/details", (req, res, next) => {
-    //read locator information from request
-    let locator = new Locator(
-        req.body.locationId
-    );
     if(!req.body.locationId || req.body.locationId === "") {
         res.status(400).json({
             message: "Ohhh! Location id not found or invalid",
@@ -192,7 +188,6 @@ router.post("/places/autocomplete", (req, res, next) => {
             data: err
         });
     });
-
 });
 
 module.exports = router;
