@@ -1,6 +1,6 @@
 class Locator {
 
-    constructor(locationName,geolocation,pattern,width,height,depth,calculatedBy,userId,status) {
+    constructor(locationName,geolocation,pattern,width,height,depth,userId,status) {
         this.location_name=locationName;
         this.geolocation=geolocation;
         this.pattern=pattern;
@@ -12,7 +12,7 @@ class Locator {
     }
 
     getAddLocatorSQL() {
-        let sql = `INSERT INTO locators(location_name,geolocation,pattern,width,height,depth,user_id,status) VALUES('${this.location_name}','${this.geolocation}',${this.like_count},'${this.pattern}',${this.width},${this.height},${this.depth},'${this.calculate_in}',${this.user_id},${this.status})`;
+        let sql = `INSERT INTO locators(location_name,geolocation,pattern,width,height,depth,user_id,status) VALUES('${this.location_name}','${this.geolocation}','${this.pattern}',${this.width},${this.height},${this.depth},${this.user_id},${this.status})`;
         return sql;
     }
 

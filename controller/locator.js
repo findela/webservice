@@ -30,7 +30,8 @@ router.post("/add", (req, res, next) => {
         if(err) {
             res.status(500).json({
                 message: "Shhh! Internal server error",
-                status: 500
+                status: 500,
+                data: err
             });
         }
         else if(!req.body.userId) {
