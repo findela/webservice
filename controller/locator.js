@@ -1,7 +1,12 @@
 import express from "express";
 import db from "../db/database";
 import Locator from "../model/locator";
-
+import env from '../env';
+const NodeGeocoder = require('node-geocoder');
+const geocoder = NodeGeocoder({
+    provider: 'google',
+    apiKey: env.mapApiKey
+});
 const router = express.Router();
 
 //Adding new locator
@@ -101,6 +106,50 @@ router.post("/list/details", (req, res, next) => {
                     }
                 });
             }
+        });
+    }
+});
+
+
+//Fetching specific location details (lat/long or reverse)
+router.post("/map", (req, res, next) => {
+    if((req.body.address !== "") || (req.body.latitude !=="" && req.body.longitude !== "")) {
+        if (req.body.address && req.body.address !== "") {
+            geocoder.geocode(req.body.address)
+            .then(function(response) {
+                res.status(200).json({
+                    message: "Baphh! Location details fetched successfully!",
+                    data: response
+                });
+            })
+            .catch(function(err) {
+                res.status(401).json({
+                    message: "Baxhh! Location details fetched successfully!",
+                    data: err
+                });
+            });
+        }
+        else if ((req.body.latitude && req.body.latitude !== "") && (req.body.longitude && req.body.longitude !== "")) {
+            geocoder.reverse({lat:req.body.latitude, lon:req.body.longitude})
+            .then(function(response) {
+                res.status(200).json({
+                    message: "Bashh! Location details fetched successfully!",
+                    data: response
+                });
+            })
+            .catch(function(err) {
+                res.status(401).json({
+                    message: "Bathh! Location details fetched successfully!",
+                    data: err
+                });
+            });
+        }
+
+    }
+    else {
+        res.status(401).json({
+            message: "Ohh! Validation error or invalid key!",
+            status: 401,
         });
     }
 });
