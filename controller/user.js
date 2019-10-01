@@ -190,7 +190,7 @@ function sendMobileOTP (data) {
         env.mobileApi.host+"authkey="+
         env.mobileApi.apiKey+
         "&mobiles="+data.mobileNumber+
-        "&message=Hello, your otp is "+
+        "&message=Hello "+env.mobileApi.senderId+" Admin, your otp is "+
         data.otpId+"&sender="+
         env.mobileApi.senderId+
         "&route="+env.mobileApi.apiRoute+

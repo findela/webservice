@@ -2,10 +2,14 @@ import express from "express";
 import db from "../db/database";
 import Locator from "../model/locator";
 import env from '../env';
+import Places from "google-places-web";
+
+Places.apiKey = env.googleApiKey;
+
 const NodeGeocoder = require('node-geocoder');
 const geocoder = NodeGeocoder({
     provider: 'google',
-    apiKey: env.mapApiKey
+    apiKey: Places.apiKey
 });
 const router = express.Router();
 
@@ -15,12 +19,10 @@ router.post("/add", (req, res, next) => {
     let locator = new Locator(
         req.body.locationName,
         req.body.geolocation,
-        req.body.likedCount,
         req.body.pattern,
         req.body.width,
         req.body.height,
         req.body.depth,
-        req.body.calculatedBy,
         req.body.userId,
         req.body.status
     );
@@ -32,9 +34,9 @@ router.post("/add", (req, res, next) => {
             });
         }
         else if(!req.body.userId) {
-            res.status(401).json({
+            res.status(400).json({
                 message: "Ohhh! User id not found or invalid",
-                status: 401
+                status: 400
             });
         }
         else {
@@ -84,9 +86,9 @@ router.post("/list/details", (req, res, next) => {
         req.body.locationId
     );
     if(!req.body.locationId || req.body.locationId === "") {
-        res.status(401).json({
+        res.status(400).json({
             message: "Ohhh! Location id not found or invalid",
-            status: 401,
+            status: 400,
         });
     }
     else {
@@ -100,7 +102,7 @@ router.post("/list/details", (req, res, next) => {
             }
             else {
                 res.status(200).json({
-                    message: "Bahhh! Location details fetched successfully!",
+                    message: "Bahh! Location details fetched successfully!",
                     data: {
                         locationDetails: data[0]
                     }
@@ -112,46 +114,84 @@ router.post("/list/details", (req, res, next) => {
 
 
 //Fetching specific location details (lat/long or reverse)
-router.post("/map", (req, res, next) => {
-    if((req.body.address !== "") || (req.body.latitude !=="" && req.body.longitude !== "")) {
-        if (req.body.address && req.body.address !== "") {
+router.post("/map/current", (req, res, next) => {
+    if(req.body.type && req.body.type !== "") {
+        if (req.body.address && req.body.type === "address") {
             geocoder.geocode(req.body.address)
             .then(function(response) {
                 res.status(200).json({
-                    message: "Baphh! Location details fetched successfully!",
+                    message: "Bahh! Location details fetched successfully!",
                     data: response
                 });
             })
             .catch(function(err) {
-                res.status(401).json({
-                    message: "Baxhh! Location details fetched successfully!",
+                res.status(400).json({
+                    message: "Ohh! Location couldn't be fetched!",
                     data: err
                 });
             });
         }
-        else if ((req.body.latitude && req.body.latitude !== "") && (req.body.longitude && req.body.longitude !== "")) {
+        else if (req.body.latitude && req.body.longitude && req.body.type === "geoLocation") {
             geocoder.reverse({lat:req.body.latitude, lon:req.body.longitude})
             .then(function(response) {
                 res.status(200).json({
-                    message: "Bashh! Location details fetched successfully!",
+                    message: "Bahh! Location details fetched successfully!",
                     data: response
                 });
             })
             .catch(function(err) {
-                res.status(401).json({
-                    message: "Bathh! Location details fetched successfully!",
+                res.status(400).json({
+                    message: "Ohh! Location couldn't be fetched!",
                     data: err
                 });
             });
         }
-
+        else {
+            res.status(400).json({
+                message: "Ohh! Validation error or invalid key!",
+                status: 400,
+            });
+        }
     }
     else {
-        res.status(401).json({
+        res.status(400).json({
             message: "Ohh! Validation error or invalid key!",
-            status: 401,
+            status: 400,
         });
     }
+});
+
+router.post("/places/autocomplete", (req, res, next) => {
+
+    Places.autocomplete({ input: req.body.partialAddress})
+    .then(results => {
+        let arrayData = [];
+        let count = 0;
+        results.predictions.forEach(function(item) {
+            Places.details({ placeid: item.place_id })
+            .then(response => {
+                item.geo_location = response.result.geometry.location;
+                arrayData.push(item);
+                count++;
+                if(results.predictions.length === count) {
+                    res.status(200).json({
+                        data: arrayData
+                    });
+                }
+            })
+            .catch(function(err) {
+                res.status(400).json({
+                    data: err
+                });
+            });
+        });
+    })
+    .catch(function(err) {
+        res.status(400).json({
+            data: err
+        });
+    });
+
 });
 
 module.exports = router;
