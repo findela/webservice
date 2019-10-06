@@ -31,16 +31,16 @@ router.post("/current", (req, res) => {
         }
         else if (req.body.latitude && req.body.longitude && req.body.type === "geoLocation") {
             geocoder.reverse({lat:req.body.latitude, lon:req.body.longitude})
-                .then(function(response) {
-                    res.status(200).json({
-                        data: response
-                    });
-                })
-                .catch(function(err) {
-                    res.status(400).json({
-                        data: err
-                    });
+            .then(function(response) {
+                res.status(200).json({
+                    data: response
                 });
+            })
+            .catch(function(err) {
+                res.status(400).json({
+                    data: err
+                });
+            });
         }
         else {
             res.status(400).json({

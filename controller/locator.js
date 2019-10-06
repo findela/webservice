@@ -3,6 +3,7 @@ import db from "../db/database";
 import Locator from "../model/locator";
 
 const router = express.Router();
+const _ = require("lodash");
 
 //Adding new locator
 router.post("/add", (req, res, next) => {
@@ -46,33 +47,11 @@ router.post("/add", (req, res, next) => {
     });
 });
 
-//Fetching locator list with details (userId with null optional)
-router.post("/list", (req, res, next) => {
-    //read locator information from request
-    let locator = new Locator(
-        req.body.userId
-    );
-    db.query(locator.fetchListLocatorSQL(req.body.userId), (err, data)=> {
-        if(err) {
-            res.status(500).json({
-                message: "Shhh! Internal server error",
-                status: 500,
-                data: err
-            });
-        }
-        else {
-            res.status(200).json({
-                message: "Ummm! Location fetched successfully!",
-                data: {
-                    locationDetails: data
-                }
-            });
-        }
-    });
-});
-
 //Fetching specific locator details (userId with null optional)
-router.post("/list/details", (req, res, next) => {
+router.post("/details", (req, res, next) => {
+    let locator = new Locator(
+        req.body.locationId
+    );
     if(!req.body.locationId || req.body.locationId === "") {
         res.status(400).json({
             message: "Ohhh! Location id not found or invalid",
@@ -89,15 +68,81 @@ router.post("/list/details", (req, res, next) => {
                 });
             }
             else {
-                res.status(200).json({
-                    message: "Bahh! Location details fetched successfully!",
-                    data: {
-                        locationDetails: data[0]
-                    }
-                });
+                if(data[0]) {
+                    res.status(200).json({
+                        message: "Bahh! Location details fetched successfully!",
+                        data: {
+                            locationDetails: data[0]
+                        }
+                    });
+                }
+                else {
+                    res.status(200).json({
+                        message: "No location entry found!",
+                        code: 200
+                    });
+                }
+
             }
         });
     }
 });
+
+
+//Fetching locator list with details (userId with null optional)
+router.post("/list", (req, res, next) => {
+    //read locator information from request
+    let locator = new Locator(
+        req.body.userId,
+        req.body.latitude,
+        req.body.longitude
+    );
+    db.query(locator.fetchListLocatorSQL(req.body.userId), (err, data)=> {
+        if(err) {
+            res.status(500).json({
+                message: "Shhh! Internal server error",
+                status: 500,
+                data: err
+            });
+        }
+        else {
+            //const minRadius = 20;
+            data.forEach(function(item) {
+              item.geolocation = JSON.parse(item.geolocation).geo_location;
+              item.distanceInKm = parseFloat(distance(req.body.latitude,req.body.longitude,item.geolocation.lat,item.geolocation.lng,"K").toFixed(2));
+            });
+            data = _.sortBy(data,'distanceInKm');
+            if(data.length) {
+                res.status(200).json({
+                    message: "Ummm! Location fetched successfully!",
+                    data: {
+                        nearestLocations : data
+                    }
+                });
+            }
+            else {
+                res.status(200).json({
+                    message: "No data found of user!",
+                    code: 204
+                });
+            }
+        }
+    });
+});
+
+function distance(lat1, lon1, lat2, lon2, unit) {
+    let radlat1 = Math.PI * lat1/180;
+    let radlat2 = Math.PI * lat2/180;
+    let theta = lon1-lon2;
+    let radtheta = Math.PI * theta/180;
+    let dist = Math.sin(radlat1) * Math.sin(radlat2) + Math.cos(radlat1) * Math.cos(radlat2) * Math.cos(radtheta);
+    if (dist > 1) { dist = 1; }
+    dist = Math.acos(dist);
+    dist = dist * 180/Math.PI;
+    dist = dist * 60 * 1.1515;
+    if (unit === "K") { dist = dist * 1.609344; }
+    if (unit === "N") { dist = dist * 0.8684; }
+    return dist;
+}
 
 module.exports = router;

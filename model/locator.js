@@ -17,32 +17,17 @@ class Locator {
     }
 
     fetchListLocatorSQL(userId) {
-        let sql = "";
-        if(userId !== "") {
+        let sql = `SELECT locators.id as locationId, location_name as locationName,geolocation, pattern as locationPattern, width as locationWidth, depth as locationDepth,height as locationLength, locators.status as locationStatus, locators.created_at as createdAt FROM locators`;
+        if(userId) {
             this.user_id = userId;
-            sql = `SELECT locators.id as locationId, location_name as locationName, like_count as likeCount, 
-                    geolocation, pattern as locationPattern, width as locationWidth, depth as locationDepth, 
-                    height as locationLength, calculate_in as locationCalculatedBy, locators.status as locationStatus,
-                    locators.created_at as createdAt FROM locators where locators.user_id = '${this.user_id}' order by id desc`;
+            sql = sql+` where locators.user_id = '${this.user_id}'`;
         }
-        else {
-            sql = `SELECT locators.id as locationId, location_name as locationName, like_count as likeCount, geolocation, 
-                    pattern as locationPattern, width as locationWidth, depth as locationDepth, 
-                    height as locationLength, calculate_in as locationCalculatedBy, locators.status as locationStatus,
-                    locators.created_at as createdAt , users.first_name as userFirstName, users.last_name as userLastName, 
-                    users.email as userEmailId FROM locators left join users on users.id = locators.user_id 
-                    where locators.status = 1 order by locators.id DESC `;
-        }
+        sql += ` order by id desc`;
         return sql;
     }
 
     fetchDetailLocatorSQL(locationId) {
-        let sql = `SELECT locators.id as locationId, location_name as locationName, like_count as likeCount, geolocation, 
-                    pattern as locationPattern, width as locationWidth, depth as locationDepth, 
-                    height as locationLength, calculate_in as locationCalculatedBy, locators.status as locationStatus,
-                    locators.created_at as createdAt , users.first_name as userFirstName, users.last_name as userLastName, 
-                    users.email as userEmailId FROM locators left join users on users.id = locators.user_id 
-                    where locators.id = ${locationId}`;
+        let sql = `SELECT locators.id as locationId, location_name as locationName, geolocation, pattern as locationPattern, width as locationWidth, depth as locationDepth, height as locationLength, locators.status as locationStatus,locators.created_at as createdAt , users.first_name as userFirstName, users.last_name as userLastName, users.email as userEmailId FROM locators left join users on users.id = locators.user_id where locators.id = ${locationId}`;
         return sql;
     }
 }
