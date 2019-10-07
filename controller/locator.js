@@ -97,39 +97,54 @@ router.post("/list", (req, res, next) => {
         req.body.latitude,
         req.body.longitude
     );
-    db.query(locator.fetchListLocatorSQL(req.body.userId), (err, data)=> {
-        if(err) {
-            res.status(500).json({
-                message: "Shhh! Internal server error",
-                status: 500,
-                data: err
-            });
-        }
-        else {
-            //const minRadius = 20;
-            data.forEach(function(item) {
-              item.geolocation = JSON.parse(item.geolocation).geo_location;
-              item.distanceInKm = parseFloat(distance(req.body.latitude,req.body.longitude,item.geolocation.lat,item.geolocation.lng,"K").toFixed(2));
-            });
-            data = _.sortBy(data,'distanceInKm');
-            if(data.length) {
-                res.status(200).json({
-                    message: "Ummm! Location fetched successfully!",
-                    data: {
-                        nearestLocations : data
-                    }
+
+    if(req.body.latitude && req.body.longitude) {
+        db.query(locator.fetchListLocatorSQL(req.body.userId), (err, data)=> {
+            if(err) {
+                res.status(500).json({
+                    message: "Shhh! Internal server error",
+                    status: 500,
+                    data: err
                 });
             }
             else {
-                res.status(200).json({
-                    message: "No data found of user!",
-                    code: 204
+                let nearestLocationArray = [];
+                const minRadius = 20.00;
+                data.forEach(function(item) {
+                    item.geolocation = JSON.parse(item.geolocation).geo_location;
+                    item.distanceInKm = parseFloat(distance(req.body.latitude,req.body.longitude,item.geolocation.lat,item.geolocation.lng,"K").toFixed(2));
+                    if(item.distanceInKm <= minRadius) {
+                        nearestLocationArray.push(item);
+                    }
                 });
+                if(nearestLocationArray.length) {
+                    res.status(200).json({
+                        message: "Ummm! Location fetched successfully!",
+                        data: {
+                            nearestLocations : _.sortBy(nearestLocationArray,'distanceInKm')
+                        }
+                    });
+                }
+                else {
+                    res.status(200).json({
+                        message: "No data found!",
+                        code: 200
+                    });
+                }
             }
-        }
-    });
+        });
+    }
+    else {
+        res.status(200).json({
+            message: "Valid parameter missing",
+            status: 200,
+        });
+    }
+
 });
 
+
+//haverson algorithm
 function distance(lat1, lon1, lat2, lon2, unit) {
     let radlat1 = Math.PI * lat1/180;
     let radlat2 = Math.PI * lat2/180;
