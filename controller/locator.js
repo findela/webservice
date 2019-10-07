@@ -10,11 +10,12 @@ router.post("/add", (req, res, next) => {
     //read locator information from request
     let locator = new Locator(
         req.body.locationName,
-        req.body.geolocation,
+        JSON.stringify(req.body.geolocation),
         req.body.pattern,
         req.body.width,
         req.body.height,
         req.body.depth,
+        req.body.measureIn,
         req.body.userId,
         req.body.status
     );
