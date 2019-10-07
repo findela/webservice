@@ -112,7 +112,7 @@ router.post("/list", (req, res, next) => {
                 let nearestLocationArray = [];
                 const minRadius = 20.00;
                 data.forEach(function(item) {
-                    item.geolocation = JSON.parse(item.geolocation).geo_location;
+                    item.geolocation = JSON.parse(item.geolocation);
                     item.distanceInKm = parseFloat(distance(req.body.latitude,req.body.longitude,item.geolocation.lat,item.geolocation.lng,"K").toFixed(2));
                     if(item.distanceInKm <= minRadius) {
                         nearestLocationArray.push(item);
