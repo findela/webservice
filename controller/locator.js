@@ -148,24 +148,25 @@ router.post("/list", (req, res) => {
 router.post("/calculate", (req, res) => {
     //read locator information from request
     let data = {};
+    let message = '';
     if(req.body.height && req.body.width && req.body.depth && req.body.measureIn) {
         if(req.body.measureIn.toLowerCase() === "feet") {
             data.usGallons = parseFloat(7.5*(req.body.height*req.body.width*req.body.depth)).toFixed(0,2);
             data.liters =  parseFloat(28.35*(req.body.height*req.body.width*req.body.depth)).toFixed(0,2);
             data.imperialGallons = parseFloat(6.245*(req.body.height*req.body.width*req.body.depth)).toFixed(0,2);
+            message = "grtt! locator area calculated";
         }
         else if(req.body.measureIn.toLowerCase() === "meter") {
             data.usGallons = parseFloat(264.172*(req.body.height*req.body.width*req.body.depth)).toFixed(0,2);
             data.liters =  parseFloat(1000*(req.body.height*req.body.width*req.body.depth)).toFixed(0,2);
             data.imperialGallons = parseFloat(219.969*(req.body.height*req.body.width*req.body.depth)).toFixed(0,2);
+            message = "grtt! locator area calculated";
         }
         else {
-            data.usGallons = 0;
-            data.liters = 0;
-            data.imperialGallons = 0;
+            message = "Unsupported locator measurement type";
         }
         res.status(200).json({
-            message: "grtt! locator area calculated",
+            message: message,
             status: 200,
             data: data
         });
