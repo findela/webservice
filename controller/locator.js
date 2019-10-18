@@ -6,7 +6,7 @@ const router = express.Router();
 const _ = require("lodash");
 
 //Adding new locator
-router.post("/add", (req, res, next) => {
+router.post("/add", (req, res) => {
     //read locator information from request
     let locator = new Locator(
         req.body.locationName,
@@ -49,13 +49,13 @@ router.post("/add", (req, res, next) => {
 });
 
 //Fetching specific locator details (userId with null optional)
-router.post("/details", (req, res, next) => {
+router.post("/details", (req, res) => {
     let locator = new Locator(
         req.body.locationId
     );
     if(!req.body.locationId || req.body.locationId === "") {
         res.status(400).json({
-            message: "Ohhh! Location id not found or invalid",
+            message: "Ohhh! Location id invalid",
             status: 400,
         });
     }
@@ -80,7 +80,7 @@ router.post("/details", (req, res, next) => {
                 else {
                     res.status(200).json({
                         message: "No location entry found!",
-                        code: 200
+                        status: 404
                     });
                 }
 
@@ -91,7 +91,7 @@ router.post("/details", (req, res, next) => {
 
 
 //Fetching locator list with details (userId with null optional)
-router.post("/list", (req, res, next) => {
+router.post("/list", (req, res) => {
     //read locator information from request
     let locator = new Locator(
         req.body.userId,
@@ -121,6 +121,7 @@ router.post("/list", (req, res, next) => {
                 if(nearestLocationArray.length) {
                     res.status(200).json({
                         message: "Ummm! Location fetched successfully!",
+                        status: 200,
                         data: {
                             nearestLocations : _.sortBy(nearestLocationArray,'distanceInKm')
                         }
@@ -129,7 +130,7 @@ router.post("/list", (req, res, next) => {
                 else {
                     res.status(200).json({
                         message: "No data found!",
-                        code: 200
+                        status: 404
                     });
                 }
             }
@@ -138,12 +139,44 @@ router.post("/list", (req, res, next) => {
     else {
         res.status(200).json({
             message: "Valid parameter missing",
-            status: 200,
+            status: 400,
         });
     }
-
 });
 
+//Fetching locator list with details (userId with null optional)
+router.post("/calculate", (req, res) => {
+    //read locator information from request
+    let data = {};
+    if(req.body.height && req.body.width && req.body.depth && req.body.measureIn) {
+        if(req.body.measureIn.toLowerCase() === "feet") {
+            data.usGallons = parseFloat(7.5*(req.body.height*req.body.width*req.body.depth)).toFixed(0,2);
+            data.liters =  parseFloat(28.35*(req.body.height*req.body.width*req.body.depth)).toFixed(0,2);
+            data.imperialGallons = parseFloat(6.245*(req.body.height*req.body.width*req.body.depth)).toFixed(0,2);
+        }
+        else if(req.body.measureIn.toLowerCase() === "meter") {
+            data.usGallons = parseFloat(264.172*(req.body.height*req.body.width*req.body.depth)).toFixed(0,2);
+            data.liters =  parseFloat(1000*(req.body.height*req.body.width*req.body.depth)).toFixed(0,2);
+            data.imperialGallons = parseFloat(219.969*(req.body.height*req.body.width*req.body.depth)).toFixed(0,2);
+        }
+        else {
+            data.usGallons = 0;
+            data.liters = 0;
+            data.imperialGallons = 0;
+        }
+        res.status(200).json({
+            message: "grtt! locator area calculated",
+            status: 200,
+            data: data
+        });
+    }
+    else {
+        res.status(200).json({
+            message: "Valid parameter missing",
+            status: 400,
+        });
+    }
+});
 
 //haverson algorithm
 function distance(lat1, lon1, lat2, lon2, unit) {
