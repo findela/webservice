@@ -110,22 +110,16 @@ router.post("/list", (req, res) => {
             }
             else {
                 let nearestLocationArray = [];
-                const minRadius = 20.00;
+                const maxRadius = 20.00;
+                let calculationType = ["meter", "feet"];
                 data.forEach(function(item) {
                     item.geolocation = JSON.parse(item.geolocation);
                     item.distanceInKm = parseFloat(distance(req.body.latitude,req.body.longitude,item.geolocation.lat,item.geolocation.lng,"K").toFixed(2));
-                    if(item.distanceInKm <= minRadius) {
+                    if(item.distanceInKm <= maxRadius) {
                         nearestLocationArray.push(item);
                     }
-                    if(item.measureIn.toLowerCase() === "feet") {
-                        item.usGallons = parseFloat(7.5*(item.locationLength*item.locationWidth*item.locationDepth)).toFixed(0,2);
-                        item.liters =  parseFloat(28.35*(item.locationLength*item.locationWidth*item.locationDepth)).toFixed(0,2);
-                        item.imperialGallons = parseFloat(6.245*(item.locationLength*item.locationWidth*item.locationDepth)).toFixed(0,2);
-                    }
-                    else if(item.measureIn.toLowerCase() === "meter") {
-                        item.usGallons = parseFloat(264.172*(item.locationLength*item.locationWidth*item.locationDepth)).toFixed(0,2);
-                        item.liters =  parseFloat(1000*(item.locationLength*item.locationWidth*item.locationDepth)).toFixed(0,2);
-                        item.imperialGallons = parseFloat(219.969*(item.locationLength*item.locationWidth*item.locationDepth)).toFixed(0,2);
+                    if(calculationType.includes(item.measureIn.toLowerCase())) {
+                        item['calculatedDetails'] = calculateArea(item.locationLength,item.locationWidth,item.locationDepth,item.measureIn)
                     }
                 });
                 if(nearestLocationArray.length) {
@@ -158,19 +152,11 @@ router.post("/list", (req, res) => {
 router.post("/calculate", (req, res) => {
     //read locator information from request
     let data = {};
+    let calculationType = ["meter", "feet"];
     let message = '';
     if(req.body.height && req.body.width && req.body.depth && req.body.measureIn) {
-        if(req.body.measureIn.toLowerCase() === "feet") {
-            data.usGallons = parseFloat(7.5*(req.body.height*req.body.width*req.body.depth)).toFixed(0,2);
-            data.liters =  parseFloat(28.35*(req.body.height*req.body.width*req.body.depth)).toFixed(0,2);
-            data.imperialGallons = parseFloat(6.245*(req.body.height*req.body.width*req.body.depth)).toFixed(0,2);
-            message = "grtt! locator area calculated";
-        }
-        else if(req.body.measureIn.toLowerCase() === "meter") {
-            data.usGallons = parseFloat(264.172*(req.body.height*req.body.width*req.body.depth)).toFixed(0,2);
-            data.liters =  parseFloat(1000*(req.body.height*req.body.width*req.body.depth)).toFixed(0,2);
-            data.imperialGallons = parseFloat(219.969*(req.body.height*req.body.width*req.body.depth)).toFixed(0,2);
-            message = "grtt! locator area calculated";
+        if(calculationType.includes(req.body.measureIn.toLowerCase())) {
+            data = calculateArea(req.body.height,req.body.width,req.body.depth,req.body.measureIn)
         }
         else {
             message = "Unsupported locator measurement type";
@@ -203,6 +189,23 @@ function distance(lat1, lon1, lat2, lon2, unit) {
     if (unit === "K") { dist = dist * 1.609344; }
     if (unit === "N") { dist = dist * 0.8684; }
     return dist;
+}
+
+
+//Formula Implementation - reservoir calculation
+function calculateArea(h,w,d,unit) {
+    let data = {};
+    if(unit.toLowerCase() === "feet") {
+        data.usGallons = parseFloat(7.5*(h*w*d)).toFixed(0,2);
+        data.liters =  parseFloat(28.35*(h*w*d)).toFixed(0,2);
+        data.imperialGallons = parseFloat(6.245*(h*w*d)).toFixed(0,2);
+    }
+    else if(unit.toLowerCase() === "meter") {
+        data.usGallons = parseFloat(264.172*(h*w*d)).toFixed(0,2);
+        data.liters =  parseFloat(1000*(h*w*d)).toFixed(0,2);
+        data.imperialGallons = parseFloat(219.969*(h*w*d)).toFixed(0,2);
+    }
+    return data;
 }
 
 module.exports = router;
