@@ -117,6 +117,16 @@ router.post("/list", (req, res) => {
                     if(item.distanceInKm <= minRadius) {
                         nearestLocationArray.push(item);
                     }
+                    if(item.measureIn.toLowerCase() === "feet") {
+                        item.usGallons = parseFloat(7.5*(item.locationLength*item.locationWidth*item.locationDepth)).toFixed(0,2);
+                        item.liters =  parseFloat(28.35*(item.locationLength*item.locationWidth*item.locationDepth)).toFixed(0,2);
+                        item.imperialGallons = parseFloat(6.245*(item.locationLength*item.locationWidth*item.locationDepth)).toFixed(0,2);
+                    }
+                    else if(item.measureIn.toLowerCase() === "meter") {
+                        item.usGallons = parseFloat(264.172*(item.locationLength*item.locationWidth*item.locationDepth)).toFixed(0,2);
+                        item.liters =  parseFloat(1000*(item.locationLength*item.locationWidth*item.locationDepth)).toFixed(0,2);
+                        item.imperialGallons = parseFloat(219.969*(item.locationLength*item.locationWidth*item.locationDepth)).toFixed(0,2);
+                    }
                 });
                 if(nearestLocationArray.length) {
                     res.status(200).json({
