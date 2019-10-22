@@ -70,6 +70,8 @@ router.post("/details", (req, res) => {
             }
             else {
                 if(data[0]) {
+                    data[0].geolocation = JSON.parse(data[0].geolocation);
+                    data[0].calculatedDetails = calculateArea(data[0].locationLength,data[0].locationWidth,data[0].locationDepth,data[0].measureIn);
                     res.status(200).json({
                         message: "Bahh! Location details fetched successfully!",
                         data: {
