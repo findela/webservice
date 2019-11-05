@@ -17,6 +17,11 @@ class Locator {
         return sql;
     }
 
+    getUpdateLocatorSQL(locationId) {
+        let sql = `UPDATE locators SET location_name = '${this.location_name}', geolocation = '${this.geolocation}', pattern = '${this.pattern}', width = ${this.width}, height = ${this.height}, depth = ${this.depth}, measure_in = '${this.measureIn}', user_id = ${this.userId}, status = ${this.status} where locators.id = ${locationId}`;
+        return sql;
+    }
+
     fetchListLocatorSQL(userId) {
         let sql = `SELECT locators.id as locationId, measure_in as measureIn, location_name as locationName,geolocation, pattern as locationPattern, width as locationWidth, depth as locationDepth,height as locationLength, locators.status as locationStatus, locators.created_at as createdAt FROM locators`;
         if(userId) {
@@ -29,6 +34,11 @@ class Locator {
 
     fetchDetailLocatorSQL(locationId) {
         let sql = `SELECT locators.id as locationId, location_name as locationName, measure_in as measureIn, geolocation, pattern as locationPattern, width as locationWidth, depth as locationDepth, height as locationLength, locators.status as locationStatus,locators.created_at as createdAt , users.first_name as userFirstName, users.last_name as userLastName, users.email as userEmailId FROM locators left join users on users.id = locators.user_id where locators.id = ${locationId}`;
+        return sql;
+    }
+
+    deleteDetailLocatorSQL(locationId) {
+        let sql = `DELETE FROM locators where locators.id = ${locationId}`;
         return sql;
     }
 }

@@ -51,6 +51,52 @@ router.post("/add", (req, res) => {
     });
 });
 
+//updating new locator
+router.post("/update", (req, res) => {
+    //read locator information from request
+    let locator = new Locator(
+        req.body.locationName,
+        JSON.stringify(req.body.geolocation),
+        req.body.pattern,
+        (!req.body.width || false) ? null : req.body.width,
+        req.body.height,
+        req.body.depth,
+        req.body.measureIn,
+        req.body.userId,
+        req.body.status,
+        req.body.locationId
+    );
+    console.log(locator);
+
+    db.query(locator.getUpdateLocatorSQL(req.body.locationId), (err, data)=> {
+        if(err) {
+            res.status(500).json({
+                message: "Shh! Internal server error",
+                status: 500,
+                data: err
+            });
+        }
+        else if(!req.body.userId) {
+            res.status(400).json({
+                message: "Ohh! User id not found or invalid",
+                status: 400
+            });
+        }
+        else {
+            let date = new Date();
+            res.status(200).json({
+                message: "Champo! Location updated successfully!",
+                data: {
+                    locationDetails: {
+                        locationId: req.body.locationId,
+                        createdAt: date.toTimeString()
+                    }
+                }
+            });
+        }
+    });
+});
+
 //Fetching specific locator details (userId with null optional)
 router.post("/details", (req, res) => {
     let locator = new Locator(
@@ -152,6 +198,47 @@ router.post("/list", (req, res) => {
         });
     }
 });
+
+//deleting locator details by id
+router.post("/delete", (req, res) => {
+
+    let locator = new Locator(
+        req.body.locationId
+    );
+    if(!req.body.locationId || req.body.locationId === "") {
+        res.status(400).json({
+            message: "Ohhh! Location id invalid",
+            status: 400,
+        });
+    }
+    else {
+        db.query(locator.deleteDetailLocatorSQL(req.body.locationId), (err, data) => {
+            if (err) {
+                res.status(500).json({
+                    message: "Shhh! Internal server error",
+                    data: err,
+                    status: 500
+                });
+            }
+            else {
+                if(data) {
+                    res.status(200).json({
+                        status: 200,
+                        message: "Bahh! Location details deleted successfully!",
+                    });
+                }
+                else {
+                    res.status(200).json({
+                        message: "No location entry found!",
+                        status: 404
+                    });
+                }
+
+            }
+        });
+    }
+});
+
 
 //Fetching locator list with details (userId with null optional)
 router.post("/calculate", (req, res) => {
