@@ -12,24 +12,27 @@ router.post("/add", (req, res) => {
         req.body.locationName,
         JSON.stringify(req.body.geolocation),
         req.body.pattern,
-        req.body.width,
+        (!req.body.width || req.body.width === undefined) ? null : req.body.width,
         req.body.height,
         req.body.depth,
         req.body.measureIn,
         req.body.userId,
         req.body.status
     );
+    if(req.body.pattern === "CIRCLE" && !req.body.width || req.body.width === undefined) {
+        req.body['width'] = null;
+    }
     db.query(locator.getAddLocatorSQL(), (err, data)=> {
         if(err) {
             res.status(500).json({
-                message: "Shhh! Internal server error",
+                message: "Shh! Internal server error",
                 status: 500,
                 data: err
             });
         }
         else if(!req.body.userId) {
             res.status(400).json({
-                message: "Ohhh! User id not found or invalid",
+                message: "Ohh! User id not found or invalid",
                 status: 400
             });
         }
@@ -112,7 +115,7 @@ router.post("/list", (req, res) => {
             }
             else {
                 let nearestLocationArray = [];
-                const maxRadius = 20.00;
+                const maxRadius = 50.00;
                 let calculationType = ["meter", "feet"];
                 data.forEach(function(item) {
                     item.geolocation = JSON.parse(item.geolocation);
@@ -156,7 +159,12 @@ router.post("/calculate", (req, res) => {
     let data = {};
     let calculationType = ["meter", "feet"];
     let message = '';
-    if(req.body.height && req.body.width && req.body.depth && req.body.measureIn) {
+
+    //for circle check
+    if(!req.body.width) {
+        req.body.width = null;
+    }
+    if(req.body.height && req.body.depth && req.body.measureIn) {
         if(calculationType.includes(req.body.measureIn.toLowerCase())) {
             data = calculateArea(req.body.height,req.body.width,req.body.depth,req.body.measureIn)
         }
@@ -197,15 +205,27 @@ function distance(lat1, lon1, lat2, lon2, unit) {
 //Formula Implementation - reservoir calculation
 function calculateArea(h,w,d,unit) {
     let data = {};
-    if(unit.toLowerCase() === "feet") {
-        data.usGallons = parseFloat(7.5*(h*w*d)).toFixed(0,2);
-        data.liters =  parseFloat(28.35*(h*w*d)).toFixed(0,2);
-        data.imperialGallons = parseFloat(6.245*(h*w*d)).toFixed(0,2);
+    if(w===null) {
+        if (unit.toLowerCase() === "feet") {
+            data.usGallons = parseFloat(7.50380 * ((3.14*(h/2)*(h/2)) * 1 * d)).toFixed(0, 2);
+            data.liters = parseFloat(28.36437 * ((3.14*(h/2)*(h/2)) * 1 * d)).toFixed(0, 2);
+            data.imperialGallons = parseFloat(6.24822 * ((3.14*(h/2)*(h/2)) * 1 * d)).toFixed(0, 2);
+        } else if (unit.toLowerCase() === "meter") {
+            data.usGallons = parseFloat(264.30599 * ((3.14*(h/2)*(h/2)) * 1 * d)).toFixed(0, 2);
+            data.liters = parseFloat(1000.50721 * ((3.14*(h/2)*(h/2)) * 1 * d)).toFixed(0, 2);
+            data.imperialGallons = parseFloat(220.08057 * ((3.14*(h/2)*(h/2)) * 1 * d)).toFixed(0, 2);
+        }
     }
-    else if(unit.toLowerCase() === "meter") {
-        data.usGallons = parseFloat(264.172*(h*w*d)).toFixed(0,2);
-        data.liters =  parseFloat(1000*(h*w*d)).toFixed(0,2);
-        data.imperialGallons = parseFloat(219.969*(h*w*d)).toFixed(0,2);
+    else {
+        if (unit.toLowerCase() === "feet") {
+            data.usGallons = parseFloat(7.5037 * (h * w * d)).toFixed(0, 2);
+            data.liters = parseFloat(28.35 * (h * w * d)).toFixed(0, 2);
+            data.imperialGallons = parseFloat(6.245 * (h * w * d)).toFixed(0, 2);
+        } else if (unit.toLowerCase() === "meter") {
+            data.usGallons = parseFloat(264.172 * (h * w * d)).toFixed(0, 2);
+            data.liters = parseFloat(1000 * (h * w * d)).toFixed(0, 2);
+            data.imperialGallons = parseFloat(219.969 * (h * w * d)).toFixed(0, 2);
+        }
     }
     return data;
 }
