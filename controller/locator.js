@@ -164,7 +164,7 @@ router.post("/list", (req, res) => {
                 const maxRadius = 50.00;
                 let calculationType = ["meter", "feet"];
                 data.forEach(function(item) {
-                    item.geolocation = item.geolocation != 'undefined' ? JSON.parse(item.geolocation) : '';
+                    item.geolocation = item.geolocation !== 'undefined' ? JSON.parse(item.geolocation) : '';
                     item.distanceInKm = parseFloat(distance(req.body.latitude,req.body.longitude,item.geolocation.lat,item.geolocation.lng,"K").toFixed(2));
                     if(item.distanceInKm <= maxRadius) {
                         nearestLocationArray.push(item);
