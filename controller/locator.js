@@ -166,9 +166,27 @@ router.post("/list", (req, res) => {
                 data.forEach(function(item) {
                     item.geolocation = item.geolocation !== 'undefined' ? JSON.parse(item.geolocation) : '';
                     item.distanceInKm = parseFloat(distance(req.body.latitude,req.body.longitude,item.geolocation.lat,item.geolocation.lng,"K").toFixed(2));
-                    if(item.distanceInKm <= maxRadius) {
-                        nearestLocationArray.push(item);
+                    //console.log(item.distanceInKm);
+                    if(req.body.distanceInKm && req.body.locationPattern) {
+                        if(item.locationPattern === req.body.locationPattern.toUpperCase() &&
+                            item.distanceInKm <= req.body.distanceInKm) {
+                            nearestLocationArray.push(item);
+                        }
                     }
+                    else if(req.body.distanceInKm) {
+                        if(item.distanceInKm <= req.body.distanceInKm) {
+                            nearestLocationArray.push(item);
+                        }
+                    }
+                    else if(req.body.locationPattern) {
+                        if(item.locationPattern === req.body.locationPattern.toUpperCase()) {
+                            nearestLocationArray.push(item);
+                        }
+                    }
+                    else {
+                        item.distanceInKm <= maxRadius ? nearestLocationArray.push(item) : '';
+                    }
+
                     if(calculationType.includes(item.measureIn.toLowerCase())) {
                         item['calculatedDetails'] = calculateArea(item.locationLength,item.locationWidth,item.locationDepth,item.measureIn)
                     }
