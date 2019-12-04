@@ -147,7 +147,9 @@ router.post("/list", (req, res) => {
     let locator = new Locator(
         req.body.userId,
         req.body.latitude,
-        req.body.longitude
+        req.body.longitude,
+        req.body.distanceInKm,
+        req.body.locationPattern
     );
 
     if(req.body.latitude && req.body.longitude) {
