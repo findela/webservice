@@ -314,8 +314,8 @@ function calculateArea(h,w,d,unit) {
     let data = {};
     data.liters =
         (w===null && unit.toLowerCase() === "feet") ? (28.32 * ((3.14 * (h / 2) * (h / 2)) * d)) :
-        (w != null && unit.toLowerCase() === "feet") ? (28.32 * (h * w * d)) :
-        (w === null ? 1000 * ((3.14 * (h / 2) * (h / 2)) * d) : 1000 * (h * w * d));
+        (w!=null && unit.toLowerCase() === "feet") ? (28.32 * (h * w * d)) :
+        (w===null ? 1000 * ((3.14 * (h / 2) * (h / 2)) * d) : 1000 * (h * w * d));
     data.imperialGallons = (0.22 * data.liters);
     data.usGallons = (unit.toLowerCase() === "feet") ? (1.2 * data.imperialGallons) : (1.200095 * data.imperialGallons);
     return data;
