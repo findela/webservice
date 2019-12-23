@@ -312,28 +312,12 @@ function distance(lat1, lon1, lat2, lon2, unit) {
 //Formula Implementation - reservoir calculation
 function calculateArea(h,w,d,unit) {
     let data = {};
-    if(w===null) {
-        if (unit.toLowerCase() === "feet") {
-            data.usGallons = parseFloat(7.50380 * ((3.14*(h/2)*(h/2)) * 1 * d)).toFixed(0, 2);
-            data.liters = parseFloat(28.36437 * ((3.14*(h/2)*(h/2)) * 1 * d)).toFixed(0, 2);
-            data.imperialGallons = parseFloat(6.24822 * ((3.14*(h/2)*(h/2)) * 1 * d)).toFixed(0, 2);
-        } else if (unit.toLowerCase() === "meter") {
-            data.usGallons = parseFloat(264.30599 * ((3.14*(h/2)*(h/2)) * 1 * d)).toFixed(0, 2);
-            data.liters = parseFloat(1000.50721 * ((3.14*(h/2)*(h/2)) * 1 * d)).toFixed(0, 2);
-            data.imperialGallons = parseFloat(220.08057 * ((3.14*(h/2)*(h/2)) * 1 * d)).toFixed(0, 2);
-        }
-    }
-    else {
-        if (unit.toLowerCase() === "feet") {
-            data.usGallons = parseFloat(7.5037 * (h * w * d)).toFixed(0, 2);
-            data.liters = parseFloat(28.35 * (h * w * d)).toFixed(0, 2);
-            data.imperialGallons = parseFloat(6.245 * (h * w * d)).toFixed(0, 2);
-        } else if (unit.toLowerCase() === "meter") {
-            data.usGallons = parseFloat(264.172 * (h * w * d)).toFixed(0, 2);
-            data.liters = parseFloat(1000 * (h * w * d)).toFixed(0, 2);
-            data.imperialGallons = parseFloat(219.969 * (h * w * d)).toFixed(0, 2);
-        }
-    }
+    data.liters =
+        (w===null && unit.toLowerCase() === "feet") ? (28.32 * ((3.14 * (h / 2) * (h / 2)) * d)) :
+        (w != null && unit.toLowerCase() === "feet") ? (28.32 * (h * w * d)) :
+        (w === null ? 1000 * ((3.14 * (h / 2) * (h / 2)) * d) : 1000 * (h * w * d));
+    data.imperialGallons = (0.22 * data.liters);
+    data.usGallons = (unit.toLowerCase() === "feet") ? (1.2 * data.imperialGallons) : (1.200095 * data.imperialGallons);
     return data;
 }
 
