@@ -120,7 +120,7 @@ router.post("/details", (req, res) => {
             else {
                 if(data[0]) {
                     data[0].geolocation = JSON.parse(data[0].geolocation);
-                    data[0].calculatedDetails = calculateArea(data[0].locationLength,data[0].locationWidth,data[0].locationDepth,data[0].measureIn);
+                    data[0].calculatedDetails = calculateArea(data[0].locationWidth,data[0].locationLength,data[0].locationDepth,data[0].measureIn);
                     res.status(200).json({
                         message: "Bahh! Location details fetched successfully!",
                         data: {
@@ -190,7 +190,7 @@ router.post("/list", (req, res) => {
                     }
 
                     if(calculationType.includes(item.measureIn.toLowerCase())) {
-                        item['calculatedDetails'] = calculateArea(item.locationLength,item.locationWidth,item.locationDepth,item.measureIn)
+                        item['calculatedDetails'] = calculateArea(item.locationWidth,item.locationLength,item.locationDepth,item.measureIn)
                     }
                 });
                 if(nearestLocationArray.length) {
@@ -268,12 +268,12 @@ router.post("/calculate", (req, res) => {
     let message = '';
 
     //for circle check
-    if(!req.body.width) {
-        req.body.width = null;
+    if(!req.body.height) {
+        req.body.height = null;
     }
-    if(req.body.height && req.body.depth && req.body.measureIn) {
+    if(req.body.width && req.body.depth && req.body.measureIn) {
         if(calculationType.includes(req.body.measureIn.toLowerCase())) {
-            data = calculateArea(req.body.height,req.body.width,req.body.depth,req.body.measureIn)
+            data = calculateArea(req.body.width,req.body.height,req.body.depth,req.body.measureIn)
         }
         else {
             message = "Unsupported locator measurement type";
@@ -310,14 +310,14 @@ function distance(lat1, lon1, lat2, lon2, unit) {
 
 
 //Formula Implementation - reservoir calculation
-function calculateArea(h,w,d,unit) {
+function calculateArea(w,l,d,unit) {
     let data = {};
     data.liters =
-        (w===null && unit.toLowerCase() === "feet") ? (28.32 * ((3.14 * (h / 2) * (h / 2)) * d)) :
-        (w!=null && unit.toLowerCase() === "feet") ? (28.32 * (h * w * d)) :
-        (w===null ? 1000 * ((3.14 * (h / 2) * (h / 2)) * d) : 1000 * (h * w * d));
-    data.imperialGallons = (0.22 * data.liters);
-    data.usGallons = (unit.toLowerCase() === "feet") ? (1.2 * data.imperialGallons) : (1.200095 * data.imperialGallons);
+        (l===null && unit.toLowerCase() === "feet") ? Math.ceil(28.32 * ((3.14 * (w / 2) * (w / 2)) * d)) :
+        (l!=null && unit.toLowerCase() === "feet") ? Math.ceil(28.32 * (w * l * d)) :
+        (l===null) ? Math.ceil(1000 * ((3.14 * (w / 2) * (w / 2)) * d)) : (1000 * (w * l * d));
+    data.imperialGallons = Math.ceil(0.22 * data.liters);
+    data.usGallons = Math.ceil(1.200095 * data.imperialGallons);
     return data;
 }
 
