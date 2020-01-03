@@ -12,8 +12,8 @@ router.post("/add", (req, res) => {
         req.body.locationName,
         JSON.stringify(req.body.geolocation),
         req.body.pattern,
-        (!req.body.width || req.body.width === undefined) ? null : req.body.width,
-        req.body.height,
+        (!req.body.height || false) ? null : req.body.height,
+        req.body.width,
         req.body.depth,
         req.body.measureIn,
         req.body.userId,
@@ -58,15 +58,14 @@ router.post("/update", (req, res) => {
         req.body.locationName,
         JSON.stringify(req.body.geolocation),
         req.body.pattern,
-        (!req.body.width || false) ? null : req.body.width,
-        req.body.height,
+        (!req.body.height || false) ? null : req.body.height,
+        req.body.width,
         req.body.depth,
         req.body.measureIn,
         req.body.userId,
         req.body.status,
         req.body.locationId
     );
-    console.log(locator);
 
     db.query(locator.getUpdateLocatorSQL(req.body.locationId), (err, data)=> {
         if(err) {
