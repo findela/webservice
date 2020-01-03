@@ -12,15 +12,15 @@ router.post("/add", (req, res) => {
         req.body.locationName,
         JSON.stringify(req.body.geolocation),
         req.body.pattern,
-        (!req.body.height || false) ? null : req.body.height,
         req.body.width,
+        (!req.body.height || false) ? null : req.body.height,
         req.body.depth,
         req.body.measureIn,
         req.body.userId,
         req.body.status
     );
-    if(req.body.pattern === "CIRCLE" && !req.body.width || req.body.width === undefined) {
-        req.body['width'] = null;
+    if(req.body.pattern === "CIRCLE" && !req.body.height || req.body.height === undefined) {
+        req.body['height'] = null;
     }
     db.query(locator.getAddLocatorSQL(), (err, data)=> {
         if(err) {
